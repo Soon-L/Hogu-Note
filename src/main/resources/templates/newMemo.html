@@ -36,6 +36,7 @@
   <div class="editor-wrap">
     <textarea placeholder="여기에 메모를 작성하세요…" id="originalMemo" name="originalMemo"></textarea>
   </div>
+  <div id="personalCode" name="personalCode" style="display: none;" th:text="${personalCode}"></div>
  
   <!-- 저장 모달 -->
   <div class="overlay" id="modal-save" onclick="closeOnOverlay(event, 'save')">
@@ -45,13 +46,17 @@
         <svg viewBox="0 0 24 24"><path d="M12 1l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
       </div>
       <div class="modal-title">저장</div>
-	  <span id="modalOriginalMemo" style="display: none;"></span>
       <div class="modal-desc">시크릿 모드로 저장하려면<br/>비밀번호를 입력해주세요</div>
-      <div class="modal-row">
-        <input type="password" placeholder="비밀번호 입력" id="savePassword" name="pw">
-        <button class="btn-modal btn-primary" id="saveBtnModal" onclick="doSave()">저장</button>
-      </div>
+	  <form id="memoForm">
+		<div class="modal-row">
+		  <div id="modalOriginalMemo" style="display: none;"></div>
+		  <div id="modalPersonalCode" style="display: none;"></div>
+		  <input type="password" placeholder="비밀번호 입력" id="savePassword" name="pw">
+		  <button class="btn-modal btn-primary" id="saveBtnModal" onclick="doSave()">저장</button>
+		</div>
+	  </form>
     </div>
+	<div id="responseDiv"></div>
   </div>
  
   <!-- 불러오기 모달 -->
