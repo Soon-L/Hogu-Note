@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>누렁메모</title>
+  <link th:href="@{https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap}" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/main.css}">
+</head>
+<body>
+  <div class="card">
+    <div class="logo-badge">
+      <!-- 메모 아이콘 -->
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2H7l-4 4V5z"/>
+      </svg>
+    </div>
+
+    <h1>시크릿 메모</h1>
+    <p class="subtitle">나만의 비밀 메모를 안전하게 보관하세요</p>
+
+    <div class="section-label">코드로 불러오기</div>
+    <div class="input-row">
+      <input type="text" placeholder="발급받은 코드를 입력하세요" id="codeInput" />
+      <button class="btn-load" onclick="loadMemo()">불러오기</button>
+    </div>
+
+    <div class="divider"><span>또는</span></div>
+
+    <a th:href="@{/new_memo}" class="btn-new">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      새로 만들기
+    </a>
+  </div>
+  <script th:src="@{/main.js}"></script>
+</body>
+</html>

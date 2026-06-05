@@ -1,0 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
+ 
+:root {
+  --main: #E6AF00;
+  --base: #FFEBE8;
+  --point: #2957CF;
+  --dark: #1a1a1a;
+  --muted: #888;
+}
+ 
+* { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+body {
+  background-color: var(--base);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+ 
+/*body::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 380px;
+  height: 380px;
+  background: var(--main);
+  border-radius: 50%;
+  opacity: 0.18;
+  pointer-events: none;
+}
+body::after {
+  content: '';
+  position: absolute;
+  bottom: -100px;
+  left: -80px;
+  width: 280px;
+  height: 280px;
+  background: var(--point);
+  border-radius: 50%;
+  opacity: 0.10;
+  pointer-events: none;
+}*/
+ 
+.card {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 40px rgba(41,87,207,0.10), 0 2px 8px rgba(0,0,0,0.06);
+  padding: 56px 48px 48px;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.5s ease both;
+}
+ 
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+ 
+.logo-badge {
+  width: 56px;
+  height: 56px;
+  background: var(--main);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(230,175,0,0.30);
+}
+.logo-badge svg {
+  width: 28px;
+  height: 28px;
+  fill: #fff;
+}
+ 
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  color: var(--dark);
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+ 
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 36px;
+  text-align: center;
+}
+ 
+.section-label {
+  width: 100%;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--point);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+ 
+.input-row {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+ 
+input[type="text"] {
+  flex: 1;
+  padding: 13px 16px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.95rem;
+  color: var(--dark);
+  background: var(--base);
+  outline: none;
+  transition: border 0.2s;
+}
+input[type="text"]::placeholder { color: #bbb; }
+input[type="text"]:focus { border-color: var(--main); background: #fff; }
+ 
+.btn-load {
+  padding: 13px 18px;
+  background: var(--point);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-load:hover { background: #1e3fa8; }
+.btn-load:active { transform: scale(0.97); }
+ 
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #eee;
+}
+.divider span {
+  font-size: 0.78rem;
+  color: #ccc;
+  font-weight: 500;
+}
+ 
+.btn-new {
+  width: 100%;
+  padding: 16px;
+  background: var(--main);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 20px rgba(230,175,0,0.35);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.btn-new:hover { background: #cc9c00; box-shadow: 0 6px 24px rgba(230,175,0,0.45); }
+.btn-new:active { transform: scale(0.98); }
+.btn-new svg { width: 18px; height: 18px; fill: #fff; }

@@ -1,0 +1,311 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
+ 
+:root {
+  --main: #E6AF00;
+  --base: #FFEBE8;
+  --point: #2957CF;
+  --dark: #1a1a1a;
+  --muted: #777;
+  --white: #fff;
+}
+ 
+* { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+html, body {
+  height: 100%;
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--base);
+  display: flex;
+  flex-direction: column;
+}
+ 
+/* ── 메뉴바 ── */
+.menubar {
+  background: var(--main);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 54px;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(230,175,0,0.25);
+  flex-shrink: 0;
+}
+ 
+.menubar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.menubar-title svg { width: 18px; height: 18px; fill: #fff; opacity: 0.85; }
+ 
+.menu-btn {
+  background: rgba(255,255,255,0.18);
+  border: 1.5px solid rgba(255,255,255,0.30);
+  color: #fff;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.menu-btn:hover { background: rgba(255,255,255,0.30); }
+.menu-btn:active { transform: scale(0.96); }
+.menu-btn svg { width: 14px; height: 14px; fill: #fff; }
+ 
+/* ── 에디터 ── */
+.editor-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px 24px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+ 
+textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 300px;
+  background: #fff;
+  border: 2px solid #f0d9d6;
+  border-radius: 18px;
+  padding: 28px 32px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1rem;
+  line-height: 1.9;
+  color: var(--dark);
+  resize: none;
+  outline: none;
+  box-shadow: 0 4px 24px rgba(41,87,207,0.06);
+  transition: border 0.2s;
+}
+textarea:focus { border-color: var(--main); }
+textarea::placeholder { color: #ccc; }
+ 
+/* ── 모달 오버레이 ── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(26,26,26,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.active { display: flex; }
+ 
+.modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 36px 32px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  animation: popIn 0.22s cubic-bezier(.34,1.56,.64,1) both;
+}
+ 
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+ 
+.modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.modal-icon svg { width: 24px; height: 24px; }
+.icon-save  { background: rgba(230,175,0,0.15); }
+.icon-save svg { fill: var(--main); }
+.icon-load  { background: rgba(41,87,207,0.12); }
+.icon-load svg { fill: var(--point); }
+.icon-exit  { background: rgba(220,60,60,0.10); }
+.icon-exit svg { fill: #d93c3c; }
+.icon-share { background: rgba(230,175,0,0.12); }
+.icon-share svg { fill: var(--main); }
+ 
+.modal-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+ 
+.modal-desc {
+  font-size: 0.97rem;
+  font-weight: 600;
+  color: var(--dark);
+  text-align: center;
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+ 
+.modal-row {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+ 
+.modal input[type="text"],
+.modal input[type="password"] {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.92rem;
+  color: var(--dark);
+  background: var(--base);
+  outline: none;
+  transition: border 0.2s;
+}
+.modal input:focus { border-color: var(--main); background: #fff; }
+.modal input::placeholder { color: #bbb; }
+ 
+.btn-modal {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn-modal:active { transform: scale(0.96); }
+ 
+.btn-primary { background: var(--point); color: #fff; }
+.btn-primary:hover { background: #1e3fa8; }
+ 
+.btn-warning { background: #d93c3c; color: #fff; }
+.btn-warning:hover { background: #b52e2e; }
+ 
+.btn-exit-pair {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+.btn-exit-pair .btn-modal { flex: 1; }
+ 
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #ccc;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: #888; }
+ 
+/* ── 공유 모달 전용 ── */
+.share-code-row {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+ 
+.code-box {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  font-family: 'Noto Sans KR', monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--point);
+  background: var(--base);
+  letter-spacing: 0.12em;
+  user-select: all;
+  cursor: text;
+}
+ 
+.btn-copy {
+  padding: 12px 16px;
+  background: var(--main);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-copy svg { width: 14px; height: 14px; fill: #fff; }
+.btn-copy:hover { background: #cc9c00; }
+.btn-copy:active { transform: scale(0.96); }
+ 
+.share-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.share-divider::before,
+.share-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #eee;
+}
+.share-divider span {
+  font-size: 0.75rem;
+  color: #ccc;
+  font-weight: 500;
+}
+ 
+.btn-kakao {
+  width: 100%;
+  padding: 13px;
+  background: #FEE500;
+  color: #3C1E1E;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.18s, transform 0.1s;
+}
+.btn-kakao:hover { background: #f5d900; }
+.btn-kakao:active { transform: scale(0.98); }
+.btn-kakao .kakao-emoji { font-size: 1.15rem; line-height: 1; }
