@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,21 +19,23 @@ public class MemoResponseDto {
 	private String personalCode;
 	private String originalMemo;
 	private String summaryMemo;
-	private String pw;
-	private Instant createdAt;
-	private Instant updatedAt;
+//	private Instant createdAt;
+//	private Instant updatedAt;
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
+	private String password;
 	
 	
 	public static MemoResponseDto fromEntity(Memo memo) {
 		
 		return MemoResponseDto.builder()
-				.memoId(memo.getMemoId())
-				.personalCode(memo.getPersonalCode())
-				.originalMemo(memo.getOriginalMemo())
-				.summaryMemo(memo.getSummaryMemo())
-				.pw(memo.getPw())
-				.createdAt(memo.getCreatedAt())
-				.updatedAt(memo.getUpdatedAt())
+				//.memoId(memo.memoId())
+				.personalCode(memo.personalCode())
+				.originalMemo(memo.originalMemo())
+				.summaryMemo(null)
+				.createdAt(memo.createdAt())
+				.updatedAt(memo.updatedAt())
+				.password(memo.password())
 				.build();
 	}
 

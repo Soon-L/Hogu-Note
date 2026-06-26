@@ -309,3 +309,15 @@ textarea::placeholder { color: #ccc; }
 .btn-kakao:hover { background: #f5d900; }
 .btn-kakao:active { transform: scale(0.98); }
 .btn-kakao .kakao-emoji { font-size: 1.15rem; line-height: 1; }
+
+
+
+/*시크릿모드 활성화*/
+.secretmode{
+	display: none;
+}
+
+.secretmode.active{
+	display: block;
+}
+

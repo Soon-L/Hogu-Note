@@ -16,13 +16,13 @@
       </svg>
     </div>
 
-    <h1>시크릿 메모</h1>
-    <p class="subtitle">나만의 비밀 메모를 안전하게 보관하세요</p>
+    <h1>누렁메모</h1>
+    <p class="subtitle"> 메모를 간편하게 보관하세요</p>
 
     <div class="section-label">코드로 불러오기</div>
     <div class="input-row">
-      <input type="text" placeholder="발급받은 코드를 입력하세요" id="codeInput" />
-      <button class="btn-load" onclick="loadMemo()">불러오기</button>
+		<input type="text" placeholder="발급받은 코드를 입력하세요" id="codeInput">
+		<button type="submit" class="btn-load" id="loadMemo" onclick="doLoad()">불러오기</button>
     </div>
 
     <div class="divider"><span>또는</span></div>
@@ -34,6 +34,23 @@
       새로 만들기
     </a>
   </div>
+  
+  
+  
+  
+  <!--불러오기 비밀번호 모달-->
+  <div class="overlay" id="modal-password" onclick="closeOnOverlay(event, 'exit')">
+  	<div class="modal">
+		<button class="modal-close" onclick="closeModal('password')">X</button>
+		<div>
+			<div>비밀번호를 입력해주세요</div>
+			<input id="passwordInput" type="password">
+			<button type="submit" onclick="checkPassword()">불러오기</button>
+		</div>
+	</div>
+  </div>
+  
+  
   <script th:src="@{/main.js}"></script>
 </body>
 </html>

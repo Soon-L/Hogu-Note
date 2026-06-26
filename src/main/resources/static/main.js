@@ -1,15 +1,160 @@
-function loadMemo() {
-  const code = document.getElementById('codeInput').value.trim();
-  if (!code) {
-    alert('코드를 입력해주세요.');
-    return;
-  }
-  window.location.href = 'newMemo.html?code=' + encodeURIComponent(code);
+let currentMemoData = {}; // 모달이 열릴 때 현재 입력값을 저장할 변수
+let dbPassword; // db에서 가져온 비밀번호
+
+
+const pwInput = document.getElementById('passwordInput');
+const personalCode = document.getElementById('codeInput');
+
+
+
+
+
+// 코드로 메모 불러오기
+async function doLoad(){
+	
+	const code = personalCode.value;
+	
+	currentMemoData = {
+		personalCode: code,
+	};
+	
+	
+	if(!code){
+		
+		alert('코드를 입력해주세요.');
+		return;
+	}
+	
+	try{
+		
+		
+		// DB에서 비번 가져오기
+		fetch(`/api/memo/${code}`)
+		    .then(response => response.json()) // JSON 형태로 파싱
+		    .then(data => {
+		        console.log(data.message); // "성공"
+				//console.log(data.dto.password);
+				
+				dbPassword = data.dto.password;
+				
+		    })
+		    .catch(error => console.error('Error:', error));
+
+		
+		const response = await fetch(`/api/memo/${code}/type`, {
+			
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({personalCode: code})
+			
+		});
+		
+		
+		if(!response.ok){
+			const errorData = await response.json();
+			throw new Error(errorData.message || '코드 확인 실패');
+		}
+		
+		//openModal('password');
+		
+		// 비밀메모
+		if(dbPassword !== null){
+			openModal('password');
+			
+		}
+		// 공개메모
+		else{
+			window.location.href = `/memo/${currentMemoData.personalCode}`;	
+		}
+		
+		
+
+		
+	}catch(error){
+		console.log('Error checking code:', error);
+		alert(error.message || '코드 확인 중 오류가 발생했습니다.')
+		
+	}
+	
+	
 }
- 
-document.addEventListener('DOMContentLoaded', function () {
-  document.getElementById('codeInput').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') loadMemo();
-  });
-});
+
+
+
+// 비밀번호 확인
+async function checkPassword(){
+	
+	const password = pwInput.value;
+	
+	if(!password){
+		
+		alert('비밀번호를 입력해주세요.');
+		return;
+	}
+	
+	
+	currentMemoData = {
+		password: password
+	};
+	
+	
+	
+	try{
+		
+		const response = await fetch('/api/memo/load', {
+			
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(currentMemoData)
+			
+		});
+
+
+		if(!response.ok){
+			const errorData = await response.json();
+			throw new Error(errorData.message || '메모 불러오기 실패');
+		}
+
+		// 불러오기 성공
+		window.location.href = `/memo/${currentMemoData.personalCode}`;	
+		
+	}catch(error){
+		console.log('Error loading code:', error);
+		alert(error.message || '메로를 불러오는 중 오류가 발생했습니다.')
+	}
+	
+	
+}
+
+
+
+
+
+
+
+
+// 모달 열기
+function openModal(name) {
+    document.getElementById('modal-' + name).classList.add('active');	
+}
+
+
+
+// 모달창 닫기
+function closeModal(name) {
+    document.getElementById('modal-' + name).classList.remove('active');
+}
+
+function closeOnOverlay(e, name) {
+    if (e.target === document.getElementById('modal-' + name)) closeModal(name);
+}
+
+
+
+
+
  

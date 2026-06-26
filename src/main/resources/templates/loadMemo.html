@@ -26,7 +26,7 @@
       <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       공유하기
     </button>
-    <button class="menu-btn" onclick="doExit()">
+    <button class="menu-btn" onclick="openModal('exit')">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       나가기
     </button>
@@ -34,14 +34,15 @@
  
   <!-- 에디터 -->
   <div class="editor-wrap">
-    <textarea placeholder="여기에 메모를 작성하세요…" id="originalMemo" name="originalMemo"></textarea>
+    <textarea placeholder="여기에 메모를 작성하세요…" id="originalMemo" name="originalMemo" th:text="${memo.originalMemo}"></textarea>
   </div>
   <div id="responseDiv"></div>
+  <div id="memoId" style="display: none;" th:text="${memo.memoId}"></div>
  
   <!-- 저장 모달 -->
   <div class="overlay" id="modal-save" onclick="closeOnOverlay(event, 'save')">
     <div class="modal">
-      <button class="modal-close" onclick="closeModal('save')">✕</button>
+      <button class="modal-close" onclick="closeModal('update')">✕</button>
       <div class="modal-icon icon-save">
         <svg viewBox="0 0 24 24"><path d="M12 1l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
       </div>
@@ -55,17 +56,13 @@
 		  <div id="modalOriginalMemo" style="display: none;"></div>
 		  <div id="personalCode" name="personalCode" style="display: none;" th:text="${personalCode}"></div>
 		  <input class="secretmode" type="password" placeholder="비밀번호 입력" id="savePassword" name="password">
-		  <button class="btn-modal btn-primary" id="saveBtnModal" type="submit" onclick="doSave(event)">저장</button>
+		  <button class="btn-modal btn-primary" id="saveBtnModal" type="button" onclick="doSave(event)">저장</button>
 		  <!--<button class="btn-modal btn-primary" id="saveBtnModal" type="button">저장</button>-->
 		</div>
 	  </form>
     </div>
   </div>
  
-  
-  
-  
-  
   <!-- 불러오기 모달 -->
   <div class="overlay" id="modal-load" onclick="closeOnOverlay(event, 'load')">
     <div class="modal">
@@ -76,11 +73,27 @@
       <div class="modal-title">불러오기</div>
       <div class="modal-desc">발급받은 코드를 입력해주세요</div>
       <div class="modal-row">
-        <input type="text" placeholder="코드 입력" id="loadCode" />
+        <input type="text" placeholder="코드 입력" id="loadCode">
         <button class="btn-modal btn-primary" onclick="doLoad()">불러오기</button>
       </div>
     </div>
   </div>
+  
+  
+  <!-- 불러오기 전 변경사항 확인 모달 -->
+  <div class="overlay" id="modal-check" onclick="closeOnOverlay(event, 'check')">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('check')">✕</button>
+      <div class="modal-title">불러오기</div>
+      <div class="modal-desc">변경사항이 있습니다. 저장하시겠습니까?</div>
+      <div class="btn-exit-pair">
+        <button class="btn-modal btn-warning" onclick="doLoadNow()">불러오기</button>
+        <button class="btn-modal btn-primary" onclick="doSaveAndLoad()">저장 후 불러오기</button>
+      </div>
+    </div>
+  </div>
+  
+  
   
   
   <!--불러오기 비밀번호 모달-->
@@ -96,25 +109,6 @@
   </div>
   
   
-  <!-- 불러오기 전 저장할건지 묻는 모달 -->
-  <div class="overlay" id="modal-saveAndLoad" onclick="closeOnOverlay(event, 'saveAndLoad')">
-    <div class="modal">
-      <button class="modal-close" onclick="closeModal('saveAndLoad')">✕</button>
-      <div class="modal-icon icon-exit">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </div>
-      <div class="modal-title">불러오기</div>
-      <div class="modal-desc">변경 사항이 있습니다. 저장하시겠습니까?</div>
-      <div class="btn-exit-pair">
-        <button class="btn-modal btn-warning" onclick="doLoadNow()">불러오기</button>
-        <button class="btn-modal btn-primary" onclick="doSaveAndLoad()">저장 후 불러오기</button>
-      </div>
-    </div>
-  </div>
-  
-  
-  
-  
   
  
   <!-- 공유하기 모달 -->
@@ -127,7 +121,7 @@
       <div class="modal-title">공유하기</div>
       <div class="modal-desc">아래 코드를 공유해주세요</div>
       <div class="share-code-row">
-        <div class="code-box" id="shareCode" th:text="${personalCode}">test code</div>
+        <div class="code-box" id="shareCode" th:text="${memo.personalCode}">test code</div>
         <button class="btn-copy" onclick="doCopy()">
           <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           복사
@@ -141,28 +135,39 @@
     </div>
   </div>
  
-  
-  
-  
-  
-  
-  <!-- 나가기 전 저장할건지 묻는 모달 -->
-  <div class="overlay" id="modal-saveAndExit" onclick="closeOnOverlay(event, 'saveAndExit')">
+  <!-- 나가기 모달 -->
+  <div class="overlay" id="modal-exit" onclick="closeOnOverlay(event, 'exit')">
     <div class="modal">
-      <button class="modal-close" onclick="closeModal('saveAndExit')">✕</button>
+      <button class="modal-close" onclick="closeModal('exit')">✕</button>
       <div class="modal-icon icon-exit">
         <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </div>
       <div class="modal-title">나가기</div>
-      <div class="modal-desc">변경 사항이 있습니다. 저장하시겠습니까?</div>
+      <div class="modal-desc">저장하지 않고 나가시겠습니까?</div>
       <div class="btn-exit-pair">
-        <button class="btn-modal btn-warning" onclick="doExitNow()">나가기</button>
+        <button class="btn-modal btn-warning" onclick="doExit()">나가기</button>
         <button class="btn-modal btn-primary" onclick="doSaveAndExit()">저장 후 나가기</button>
       </div>
     </div>
   </div>
+  
+  
+  
+  
+  <!-- 나가기 전 변경사항 확인 모달 -->
+  <div class="overlay" id="modal-check2" onclick="closeOnOverlay(event, 'check2')">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('check2')">✕</button>
+      <div class="modal-title">불러오기</div>
+      <div class="modal-desc">변경사항이 있습니다. 저장하시겠습니까?</div>
+      <div class="btn-exit-pair">
+        <button class="btn-modal btn-warning" onclick="doLoadNow()">불러오기</button>
+        <button class="btn-modal btn-primary" onclick="doSaveAndLoad()">저장 후 불러오기</button>
+      </div>
+    </div>
+  </div>
  
-  <script th:src="@{/newMemo.js}"></script>
+  <script th:src="@{/loadMemo.js}"></script>
 </body>
 </html>
  
