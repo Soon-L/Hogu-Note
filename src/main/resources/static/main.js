@@ -1,5 +1,6 @@
 let currentMemoData = {}; // 모달이 열릴 때 현재 입력값을 저장할 변수
 let dbPassword; // db에서 가져온 비밀번호
+let currentPersonalCode;
 
 
 const pwInput = document.getElementById('passwordInput');
@@ -9,14 +10,36 @@ const personalCode = document.getElementById('codeInput');
 
 
 
+// 모달 열기
+function openModal(name) {
+    document.getElementById('modal-' + name).classList.add('active');	
+}
+
+
+// 모달창 닫기
+function closeModal(name) {
+    document.getElementById('modal-' + name).classList.remove('active');
+}
+
+function closeOnOverlay(e, name) {
+    if (e.target === document.getElementById('modal-' + name)) closeModal(name);
+}
+
+
+
+
+
+
+
 // 코드로 메모 불러오기
 async function doLoad(){
 	
 	const code = personalCode.value;
+	currentPersonalCode = code;
 	
-	currentMemoData = {
-		personalCode: code,
-	};
+	// 데이터 최신화
+	await currentData(currentPersonalCode, null);
+	
 	
 	
 	if(!code){
@@ -25,29 +48,16 @@ async function doLoad(){
 		return;
 	}
 	
-	try{
-		
-		
-		// DB에서 비번 가져오기
-		fetch(`/api/memo/${code}`)
-		    .then(response => response.json()) // JSON 형태로 파싱
-		    .then(data => {
-		        console.log(data.message); // "성공"
-				//console.log(data.dto.password);
-				
-				dbPassword = data.dto.password;
-				
-		    })
-		    .catch(error => console.error('Error:', error));
-
-		
+	await getPassword(code);
+	
+	try{		
 		const response = await fetch(`/api/memo/${code}/type`, {
 			
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({personalCode: code})
+			body: JSON.stringify(currentMemoData.personalCode)
 			
 		});
 		
@@ -81,6 +91,21 @@ async function doLoad(){
 	
 }
 
+// DB에서 비번 가져오기
+async function getPassword(pcode){
+
+	await fetch(`/api/memo/${pcode}`)
+	    .then(response => response.json()) // JSON 형태로 파싱
+	    .then(data => {
+	        console.log(data.message); // "성공"
+			//console.log(data.dto.password);
+			
+			dbPassword = data.dto.password;
+			
+	    })
+	    .catch(error => console.error('Error:', error));
+}
+
 
 
 // 비밀번호 확인
@@ -94,10 +119,8 @@ async function checkPassword(){
 		return;
 	}
 	
-	
-	currentMemoData = {
-		password: password
-	};
+	// 데이터 최신화
+	currentData(currentPersonalCode, password);
 	
 	
 	
@@ -134,24 +157,20 @@ async function checkPassword(){
 
 
 
-
-
-
-// 모달 열기
-function openModal(name) {
-    document.getElementById('modal-' + name).classList.add('active');	
+// 데이터 최신화
+async function currentData(pcode, pw){
+	
+	currentMemoData = {
+		personalCode: pcode,
+		password: pw
+	};
+	
+	
 }
 
 
 
-// 모달창 닫기
-function closeModal(name) {
-    document.getElementById('modal-' + name).classList.remove('active');
-}
 
-function closeOnOverlay(e, name) {
-    if (e.target === document.getElementById('modal-' + name)) closeModal(name);
-}
 
 
 

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -38,17 +39,35 @@ public class MemoDtoController {
 	
 	
 	// 기존 메모 수정
-	@PutMapping("/{personalCode}")
-	public ResponseEntity<MemoResponseDto> updateMemo(@PathVariable(value="personalCode") String personalCode, 
-														@RequestBody MemoUpdateRequestDto requestDto){
+	@PutMapping("/update")
+	public ResponseEntity<MemoResponseDto> updateMemo(@RequestBody MemoUpdateRequestDto requestDto, HttpSession session){
 		
-		try {
-			MemoResponseDto memoResponseDto = memoService.updateMemo(personalCode, requestDto);
+		System.out.println("진입1");
+		
+		try {		
+			
+			System.out.println("진입2");
+			
+			// 인증 확인
+			Long verifiedMemoId = (Long) session.getAttribute("verifiedMemoId");
+			
+			if(verifiedMemoId == null) {
+				System.out.println("권한 문제 null");
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+			}
+			if(!verifiedMemoId.equals(requestDto.getMemoId())){
+				System.out.println("권한 문제 일치 안함");
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+			}
+			
+			
+			MemoResponseDto memoResponseDto = memoService.updateMemo(requestDto);
 			return new ResponseEntity<>(memoResponseDto, HttpStatus.OK);
 		}catch(MemoNotFoundException e){
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404
 			
 		}catch(UnauthorizedException e) {
+			System.out.println("권한 문제");
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // 401
 		}catch(Exception e) {
 			 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // 500
@@ -103,11 +122,15 @@ public class MemoDtoController {
 	
 	// 메모 불러오기
 	@PostMapping("/load")
-	public ResponseEntity<Object> loadMemo(@RequestBody MemoLoadRequestDto requestDto){
+	public ResponseEntity<Object> loadMemo(@RequestBody MemoLoadRequestDto requestDto, HttpSession session){
 		
 		
 		try {
 			MemoResponseDto memoResponseDto = memoService.loadMemo(requestDto.getPersonalCode(), requestDto.getPassword());
+			
+			// 현재 세션 삭제
+		    session.removeAttribute("verifiedMemoId");
+		    
 			return new ResponseEntity<>(memoResponseDto, HttpStatus.CREATED);
 			
 		}catch(MemoNotFoundException e){
@@ -120,6 +143,14 @@ public class MemoDtoController {
 		}
 		
 		
+	}
+	
+	
+	
+	// 편집 중 세션 만료 방지
+	@GetMapping("/session/keep-alive")
+	public ResponseEntity<Void> keepAlive() {
+	    return ResponseEntity.ok().build();
 	}
 	
 	

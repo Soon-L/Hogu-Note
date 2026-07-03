@@ -240,33 +240,34 @@ public class MemoService {
 	
 	// 메모 수정
 	@Transactional
-	 public MemoResponseDto updateMemo(String personalCode, MemoUpdateRequestDto requestDto) {
+	 public MemoResponseDto updateMemo(MemoUpdateRequestDto requestDto) {
 		
 		// 코드로 조회
-		Memo memo = memoRepository.findByPersonalCode(personalCode)
-				 .orElseThrow(() -> new MemoNotFoundException("Memo with personal code " + personalCode + " not found."));
+		Memo memo = memoRepository.findByPersonalCode(requestDto.getPersonalCode())
+				 .orElseThrow(() -> new MemoNotFoundException("Memo with personal code " + requestDto.getPersonalCode() + " not found."));
 		
 		
 		
 		// 시크릿메모여부 확인
-				if(memo.password() != "") {
-					
-					// 비밀번호 입력 확인
-					if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
-						 throw new UnauthorizedException("Password is required for this secret memo.");
-					}
-					
-					// 비밀번호 해싱 확인
-					if(!passwordEncoder.matches(requestDto.getPassword(), memo.password())) {
-						throw new UnauthorizedException("Invalid password for secret memo.");
-					}
-				}else {
-					if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
-						memo.password(passwordEncoder.encode(requestDto.getPassword()));
-					}
-				}
+//				if(memo.password() != "") {
+//					
+//					// 비밀번호 입력 확인
+//					if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
+//						 throw new UnauthorizedException("Password is required for this secret memo.");
+//					}
+//					
+//					// 비밀번호 해싱 확인
+//					if(!passwordEncoder.matches(requestDto.getPassword(), memo.password())) {
+//						throw new UnauthorizedException("Invalid password for secret memo.");
+//					}
+//				}else {
+//					if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
+//						memo.password(passwordEncoder.encode(requestDto.getPassword()));
+//					}
+//				}
 				
 				
+				// 수정 내용 저장
 				memo.originalMemo(requestDto.getOriginalMemo());
 				memo.summaryMemo(requestDto.getSummaryMemo());
 				//memo.updatedAt(Instant.now());

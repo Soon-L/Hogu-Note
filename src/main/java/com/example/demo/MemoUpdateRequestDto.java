@@ -9,8 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MemoUpdateRequestDto {
 	
+	private Long memoId;
 	private String originalMemo;
 	private String summaryMemo;
 	private String password;
+	private String personalCode;
 
 }

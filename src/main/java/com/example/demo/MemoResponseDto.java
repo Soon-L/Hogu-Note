@@ -29,7 +29,7 @@ public class MemoResponseDto {
 	public static MemoResponseDto fromEntity(Memo memo) {
 		
 		return MemoResponseDto.builder()
-				//.memoId(memo.memoId())
+				.memoId(memo.memoId())
 				.personalCode(memo.personalCode())
 				.originalMemo(memo.originalMemo())
 				.summaryMemo(null)

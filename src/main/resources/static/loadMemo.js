@@ -1,4 +1,4 @@
-// 입력 요소들
+/*// 입력 요소들
 const originalMemoInput = document.getElementById('originalMemo');
 //const pwInput = document.getElementById('savePassword');
 const loadPassword = document.getElementById('loadPassword'); // 불러올 메모의 비번
@@ -12,17 +12,19 @@ let getPassword; // 메모의 비밀번호
 
 
 
-// DB에서 원본 메모 가져오기
-fetch(`/api/memo/${personalCode.textContent}`)
-    .then(response => response.json()) // JSON 형태로 파싱
-    .then(data => {
-        console.log(data.message); // "성공"
-		console.log(data.dto);
-		
-		getOriginalMemo = data.dto.originalMemo;
-		
-    })
-    .catch(error => console.error('Error:', error));
+// DB에서 비밀번호 가져오기
+async function getMemoPassword(pcode){
+	await fetch(`/api/memo/${pcode}`)
+	    .then(response => response.json()) // JSON 형태로 파싱
+	    .then(data => {
+	        console.log(data.message); // "성공"
+			console.log(data.dto);
+
+			getPassword = data.dto.password;			
+	    })
+	    .catch(error => console.error('Error:', error));
+	
+}
 
 
 	
@@ -432,4 +434,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cancelSaveBtn) {
         cancelSaveBtn.addEventListener('click', () => closeModal('saveConfirmModal'));
     }
-});
+});*/
+
+
+
+// 편집 중 세션 만료 방지
+setInterval(async () => {
+    await fetch("/api/session/keep-alive");
+}, 5 * 60 * 1000); // 5분마다

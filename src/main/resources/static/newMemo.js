@@ -2,6 +2,7 @@
 const originalMemoInput = document.getElementById('originalMemo');
 const pwInput = document.getElementById('savePassword'); // 현재 메모 저장할때 비번
 const personalCode = document.getElementById('personalCode'); // 현재 메모의 코드
+const memoId = document.getElementById('memoId'); // 현재 메모id
 
 let currentMemoData = {}; // 모달이 열릴 때 현재 입력값을 저장할 변수
 
@@ -14,6 +15,17 @@ const loadPassword = document.getElementById('loadPassword'); // 입력한 불�
 let currentPersonalCode = ''; // 코드 저장 변수(비밀메모 모달 사용시 필요)
 let getOriginalMemo; // 현재 메모의 변경 전 메모
 let getPassword; //DB에 저장된 불러올 메모의 비번
+let getMemoData;
+
+
+// 상황 구분 변수
+let loadAfterSave = false; // 일반 저장, 불러오기 저장 구분
+let exitAfterSave = false; // 저장 후 나가기, 나가기 구분
+let loadAfterUpdate = false; // 수정 구분용
+let exitAfterUpdate = false; // 수정 후 나가기 구분용
+
+const body = document.body;
+const checkExist = body.dataset.checkExist === "true"; // 새메모, 불러온 메모 구분
 
 
 // 변경사항 변수
@@ -21,8 +33,16 @@ let unSavedChanges;
 
 
 
+
+
+console.log("checkExist: "+ checkExist);
+
+
+
+
 // 모달 열기
 async function openModal(name) {
+	console.log(name+" 모달 열림");
 
     document.getElementById('modal-' + name).classList.add('active');
 }
@@ -30,6 +50,7 @@ async function openModal(name) {
 
 // 모달창 닫기
 function closeModal(name) {
+	console.log(name+" 모달 닫힘");
     document.getElementById('modal-' + name).classList.remove('active');
 }
 
@@ -43,12 +64,31 @@ function closeOnOverlay(e, name) {
 // 현재 데이터
 async function currentData(pcode, pw){
 	
-	currentMemoData = {
-	    originalMemo: originalMemoInput.value,
-		summaryMemo : null,
-		personalCode: pcode,
-	    password: pw
-	};
+	console.log("데이터 최신화");
+	
+	// 기존메모
+	if(checkExist){
+		currentMemoData = {
+			memoId : memoId.textContent,
+		    originalMemo: originalMemoInput.value,
+			summaryMemo : null,
+			personalCode: pcode,
+		    password: pw
+		};
+		
+		console.log("현재 메모: "+currentMemoData.originalMemo);
+	}
+	// 새메모
+	else{
+		currentMemoData = {
+		    originalMemo: originalMemoInput.value,
+			summaryMemo : null,
+			personalCode: pcode,
+		    password: pw
+		};
+	}
+	
+
 }
 
 
@@ -58,7 +98,9 @@ async function currentData(pcode, pw){
 
 
 // 저장하기
-async function doSave(event) {
+async function doSave() {
+	
+	console.log("doSave 시작");
 
 	// 현재 데이터
 	currentData(personalCode.textContent.trim(), pwInput.value.trim());
@@ -78,7 +120,7 @@ async function doSave(event) {
             throw new Error(errorData.message || '메모 저장 실패');
         }
         // 폼 초기화
-        //currentMemoData = {}; // 저장 후 데이터 초기화
+        currentMemoData = {}; // 저장 후 데이터 초기화
 
     } catch (error) {
         console.error('Error saving memo:', error);
@@ -86,12 +128,57 @@ async function doSave(event) {
 	
 	closeModal('save');
 	
+	console.log("doSave 끝");
+	
 	// 모달창 닫힌 후 저장됐다고 뜨는 알림창 필요할듯
 }
 
 
+
+
+
+// 수정하기
+async function doUpdate() {
+	//새로고침 방지
+	// event.preventDefault();
+	
+	// 현재 데이터
+	currentData(personalCode.textContent.trim());
+	console.log(currentMemoData);
+
+    try {
+        const response = await fetch('/api/memo/update', {
+            method: 'PUT',
+			credentials: "same-origin",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(currentMemoData)
+        });
+		
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || '메모 저장 실패');
+        }
+
+        currentMemoData = {}; // 저장 후 데이터 초기화
+
+    } catch (error) {
+        console.error('Error saving memo:', error);
+    }
+	
+	closeModal('update');
+	
+	// 모달창 닫힌 후 저장됐다고 뜨는 알림창 필요할듯
+}
+
+
+
 // 시크릿메모로 저장 활성화
 function secretmode(){
+	
+	console.log("secretmode 시작");
 	
 	// 저장 모달에서 시크릿모드 활성화
 	const checkbox = document.getElementById('secretmodeBtn');
@@ -110,6 +197,124 @@ function secretmode(){
 			element.classList.remove('active');
 		})
 	}
+	
+	console.log("secretmode end");
+}
+
+
+
+
+// 새메모 -> 저장 모달에서 저장하기 클릭
+async function doSaveClick() {
+	
+	// 저장하기
+	await doSave();
+	
+	// 불러올 메모 데이터 확인
+	if(loadAfterSave){
+		await getMemo(loadCode.value.trim());
+
+		// 불러오기, 나가기 변경사항 확인
+		await checkChange();
+	}
+	
+	// 저장 -> 나가기
+	if(exitAfterSave){
+		await doExitNow();
+	}
+
+	
+
+}
+
+
+
+
+// 불러온 메모 -> 저장 모달에서 저장하기 클릭
+async function doUpdateClick() {
+	
+	// 수정하기
+	await doUpdate();
+	
+	// 불러올 메모 데이터 확인
+	if(loadAfterUpdate){
+		await getMemo(loadCode.value.trim());
+
+		// 불러오기, 나가기 변경사항 확인
+		await checkChange();
+	}
+	
+	// 수정 -> 나가기
+	if(exitAfterUpdate){
+		// 불러오기, 나가기 변경사항 확인
+		await doExitNow();
+	}
+
+}
+
+
+
+
+
+
+// 불러오기 -> 저장 모달열기
+function saveAndLoad() {
+	console.log("saveAndLoad 시작");
+	
+    loadAfterSave = true;
+	
+	closeModal('saveAndLoad');
+	closeModal('load');
+    openModal("save");
+	
+	console.log("saveAndLoad 끝");
+}
+
+
+// 불러오기 -> 수정 모달 열기
+function updateAndLoad(){
+	
+	loadAfterUpdate = true;
+	
+	closeModal('updateAndLoad');
+	closeModal('load');
+	openModal('update');
+	
+}
+
+
+// 일반 저장 모달열기
+function openSave() {
+    loadAfterSave = false;
+    openModal("save");
+}
+
+
+
+// 저장 안하고 불러오기
+async function doNotSaveLoad(){
+	
+	loadAfterSave = true;
+	
+	// 불러올 메모 데이터 확인
+	await getMemo(loadCode.value.trim());
+
+	// 불러오기, 나가기 변경사항 확인
+	await checkChange();
+}
+
+
+
+// 수정 안하고 불러오기
+async function doNotUpdateLoad(){
+	
+	loadAfterUpdate = true;
+	
+	// 불러올 메모 데이터 확인
+	await getMemo(loadCode.value.trim());
+
+	// 불러오기, 나가기 변경사항 확인
+	await checkChange();
 }
 
 
@@ -120,6 +325,7 @@ function secretmode(){
 
 // 코드로 메모 불러오기
 async function doLoad(){
+	console.log("doLoad 시작");
 	
 	// 입력한 코드
 	const code = loadCode.value.trim();
@@ -131,14 +337,39 @@ async function doLoad(){
 		return;
 	}
 	
+	currentPersonalCode = code;
+	
+	console.log("메모는: "+ checkExist);
+
+	// 불러올 메모 원본 데이터 확인
+	if(checkExist){
+		console.log("getmemo 탈거임");
+		await getMemo(personalCode.textContent.trim());
+	}
+
+	
 	
 	// 불러오기 전 변경사항 확인
 	unSavedChanges = await hasUnsavedChanges();
 	if(unSavedChanges){
 		
-		// 저장할건지 안할건지 묻기
-		await openModal('saveAndLoad');
-		return;
+		console.log("변경사항 있음");
+		console.log("메모는: "+ checkExist);
+		
+		if(checkExist){
+			console.log("변경사항 감지 수정");
+
+			// 저장할건지 안할건지 묻기
+			await openModal('updateAndLoad');
+			return;
+		}
+		else{
+			console.log("변경사항 감지 저장");
+
+			// 저장할건지 안할건지 묻기
+			await openModal('saveAndLoad');
+			return;
+		}
 		
 	}
 	
@@ -147,6 +378,7 @@ async function doLoad(){
 		const response = await fetch(`/api/memo/${code}/type`, {
 			
 			method: 'POST',
+			credentials: "same-origin",
 			headers: {
 				'Content-Type': 'application/json'
 			},
@@ -155,18 +387,13 @@ async function doLoad(){
 		});
 		
 		
-		
 		if(!response.ok){
 			const errorData = await response.json();
 			throw new Error(errorData.message || '코드 확인 실패');
 		}
 		
-
-		
-		currentPersonalCode = code;
-		
-		// 불러올 메모 비번 확인
-		await getMemoPassword(code);
+		// 불러올 메모 데이터 확인
+		await getMemo(code);
 		
 		// 비밀메모 체크
 		await checkSecret();
@@ -178,33 +405,56 @@ async function doLoad(){
 		
 	}
 	
+	console.log("doLoad 끝");
+	
 	
 }
 
 
 // 불러오기 -> 비번입력창 열리기
 async function checkSecret(){
+	
+	console.log("비번 확인 탐");
+	
 	// 비밀메모
 	if(getPassword !== null){
 		openModal('password');
 	}
 	// 공개메모
 	else{
-		window.location.href = `/memo/${currentPersonalCode}`;	
+		await doLoadNow();	
 	}
 }
 
 
 
-// DB에서 비밀번호 가져오기
-async function getMemoPassword(pcode){
+// DB에서 데이터 가져오기
+async function getMemo(pcode){
 	await fetch(`/api/memo/${pcode}`)
 	    .then(response => response.json()) // JSON 형태로 파싱
 	    .then(data => {
 	        console.log(data.message); // "성공"
 			console.log(data.dto);
 
-			getPassword = data.dto.password;			
+			getPassword = data.dto.password; // 비번
+			getMemoData = data.dto; // 메모 통으로
+					
+	    })
+	    .catch(error => console.error('Error:', error));
+	
+}
+
+
+// DB에서 원본 메모 가져오기
+async function getMemoOriginalMemo(pcode){
+	await fetch(`/api/memo/${pcode}`)
+	    .then(response => response.json()) // JSON 형태로 파싱
+	    .then(data => {
+	        console.log(data.message); // "성공"
+			console.log(data.dto);
+
+			getOriginalMemo = data.dto.originalMemo; // 원본 메모
+					
 	    })
 	    .catch(error => console.error('Error:', error));
 	
@@ -261,12 +511,32 @@ async function checkPassword(){
 
 // 변경사항 확인
 async function hasUnsavedChanges(){
-	return originalMemoInput.value !== "";
+	console.log(checkExist);
+	// 기존 메모
+	if(checkExist){
+		console.log(getMemoData);
+		console.log(getMemoData.originalMemo);
+		return getMemoData.originalMemo !== currentMemoData.originalMemo;
+	}
+	else{
+		console.log("새메모 경우");
+		return currentMemoData.originalMemo !== "";
+	}
+
 }
 
 
-// 저장x 불러오기
+// 코드로 이동하기
 async function doLoadNow(){
+	
+	console.log("불러온 코드: "+ currentPersonalCode);
+	
+	await currentData(currentPersonalCode, loadPassword.value.trim());
+	
+	console.log("데이터 확인: "+currentMemoData.personalCode);
+	console.log("데이터 확인: "+currentMemoData.originalMemo);
+	console.log("데이터 확인: "+currentMemoData.password);
+	
 	
 	try{
 		
@@ -285,29 +555,19 @@ async function doLoadNow(){
 			const errorData = await response.json();
 			throw new Error(errorData.message || '메모 불러오기 실패');
 		}
+		
+		window.location.href = `/memo/${currentMemoData.personalCode}`;
 
-		// 불러오기 성공
-		window.location.href = `/memo/${currentMemoData.personalCode}`;	
+
 		
 	}catch(error){
 		console.log('Error loading code:', error);
 		alert(error.message || '메로를 불러오는 중 오류가 발생했습니다.')
 	}
+	
+	console.log("doLoadNow 끝");
 }
 
-
-
-
-// 저장o 불러오기
-async function doSaveAndLoad(){
-	
-	closeModal('saveAndLoad');
-	closeModal('load');
-	openModal('save');
-	
-	// 미완) 저장 -> 이동
-	
-}
 
 
 
@@ -336,16 +596,39 @@ function doKakaoShare() {
 // 나가기
 async function doExit() {
 	
+	const code = personalCode.textContent.trim();
+	console.log("코드 가져옴?"+code);
+	
+	// 원본 데이터
+	if(checkExist){
+		await getMemo(code);
+	}
+
+	
+	// 현재 데이터
+	await currentData(code);
+	
 	unSavedChanges = await hasUnsavedChanges();
 	
 	// 변경사항 저장 여부
 	if(unSavedChanges){
+		console.log("변경사항 타긴 함")
 		
-		openModal('saveAndExit');
-		return;
+		// 수정 후 나가기
+		if(checkExist){
+			openModal('updateAndExit');
+			return;
+		}
+		// 저장 후 나가기
+		else{
+			openModal('saveAndExit');
+			return;
+		}
+		
+
 	}
 	
-    window.location.href = `/`;
+    //await doExitNow();
 }
 
 
@@ -355,9 +638,82 @@ async function doExitNow(){
 }
 
 
-// 저장o 나가기
-async function doSaveAndExit(){
-	await doSave(event);
-	await doExitNow();
+// 저장o -> 나가기
+function doSaveAndExit() {
+	console.log("saveAndExit 시작");
+	
+    exitAfterSave = true;
+	
+	closeModal('saveAndExit');
+    openModal("save");
+	
+	console.log("saveAndLoad 끝");
 }
+
+
+// 수정o -> 나가기
+function doUpdateAndExit() {
+	console.log("updateAndExit 시작");
+	
+    exitAfterUpdate = true;
+	
+	closeModal('updateAndExit');
+    openModal("update");
+	
+	console.log("saveAndLoad 끝");
+}
+
+
+
+
+// 변경사항 확인
+async function checkChange(){
+	
+	console.log("checkChange 시작");
+	
+	// 불러오기 -> 저장만 작동
+	if (loadAfterSave) {
+	    loadAfterSave = false;
+		
+		// 저장할지 유무 모달 닫기
+		closeModal('saveAndLoad');
+		
+		// 비밀메모 비번 체크
+		await checkSecret();
+	
+	}
+	
+	
+/*	// 나가기 -> 저장만 작동
+	if(exitAfterSave){
+		exitAfterSave = false;
+		await doExitNow();
+	}*/
+	
+	
+	// 수정하기
+	if(loadAfterUpdate){
+		
+		loadAfterUpdate = false;
+		
+		// 저장할지 유무 모달 닫기
+		closeModal('updateAndLoad');
+
+		// 비밀메모 비번 체크
+		await checkSecret();
+
+	}
+	
+	
+/*	// 나가기 -> 수정만 작동
+	console.log("판별용: "+exitAfterSave);
+	if(exitAfterSave){
+		exitAfterSave = false;
+		await doExitNow();
+	}*/
+}
+
+
+
+
 

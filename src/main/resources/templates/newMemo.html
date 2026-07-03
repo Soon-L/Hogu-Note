@@ -6,7 +6,7 @@
   <title>새 메모</title>
   <link rel="stylesheet" th:href="@{/newMemo.css}" />
 </head>
-<body>
+<body th:data-check-exist="${checkExist}">
  
   <!-- 메뉴바 -->
   <nav class="menubar">
@@ -14,7 +14,7 @@
       <svg viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2H7l-4 4V5z"/></svg>
       누렁메모
     </span>
-    <button class="menu-btn" onclick="openModal('save')">
+    <button class="menu-btn" onclick="openSave()">
       <svg viewBox="0 0 24 24"><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       저장
     </button>
@@ -36,7 +36,6 @@
   <div class="editor-wrap">
     <textarea placeholder="여기에 메모를 작성하세요…" id="originalMemo" name="originalMemo"></textarea>
   </div>
-  <div id="responseDiv"></div>
  
   <!-- 저장 모달 -->
   <div class="overlay" id="modal-save" onclick="closeOnOverlay(event, 'save')">
@@ -50,15 +49,12 @@
 	  	<input id="secretmodeBtn" type="checkbox" onclick="secretmode()">시크릿모드로 저장하기
 	  </div>
       <div class="secretmode modal-desc">시크릿 모드로 저장하려면<br/>비밀번호를 입력해주세요</div>
-	  <form id="memoForm">
+	  <div>
 		<div class="modal-row">
-		  <div id="modalOriginalMemo" style="display: none;"></div>
-		  <div id="personalCode" name="personalCode" style="display: none;" th:text="${personalCode}"></div>
 		  <input class="secretmode" type="password" placeholder="비밀번호 입력" id="savePassword" name="password">
-		  <button class="btn-modal btn-primary" id="saveBtnModal" type="submit" onclick="doSave(event)">저장</button>
-		  <!--<button class="btn-modal btn-primary" id="saveBtnModal" type="button">저장</button>-->
+		  <button class="btn-modal btn-primary" onclick="doSaveClick()">저장</button>
 		</div>
-	  </form>
+	  </div>
     </div>
   </div>
  
@@ -106,8 +102,8 @@
       <div class="modal-title">불러오기</div>
       <div class="modal-desc">변경 사항이 있습니다. 저장하시겠습니까?</div>
       <div class="btn-exit-pair">
-        <button class="btn-modal btn-warning" onclick="doLoadNow()">불러오기</button>
-        <button class="btn-modal btn-primary" onclick="doSaveAndLoad()">저장 후 불러오기</button>
+        <button class="btn-modal btn-warning" onclick="doNotSaveLoad()">불러오기</button>
+        <button class="btn-modal btn-primary" onclick="saveAndLoad()">저장 후 불러오기</button>
       </div>
     </div>
   </div>
@@ -127,7 +123,7 @@
       <div class="modal-title">공유하기</div>
       <div class="modal-desc">아래 코드를 공유해주세요</div>
       <div class="share-code-row">
-        <div class="code-box" id="shareCode" th:text="${personalCode}">test code</div>
+        <div class="code-box" id="personalCode" th:text="${personalCode}">test code</div>
         <button class="btn-copy" onclick="doCopy()">
           <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           복사
