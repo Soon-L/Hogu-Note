@@ -321,3 +321,14 @@ textarea::placeholder { color: #ccc; }
 	display: block;
 }
 
+
+/* ── VIEWER 모드 (읽기 전용) ── */
+textarea.viewer-mode {
+  background: #fafafa;
+  border-color: #e8e8e8;
+  cursor: default;
+  color: #444;
+}
+textarea.viewer-mode:focus {
+  border-color: #e8e8e8; /* 포커스해도 강조 없음 */
+}

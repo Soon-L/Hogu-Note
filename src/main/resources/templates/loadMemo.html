@@ -14,15 +14,15 @@
       <svg viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2H7l-4 4V5z"/></svg>
       누렁메모
     </span>
-    <button class="menu-btn" onclick="openModal('update')">
+    <button class="menu-btn" th:if="${role == 'WRITER'}" onclick="openModal('update')">
       <svg viewBox="0 0 24 24"><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       저장
     </button>
-    <button class="menu-btn" onclick="openModal('load')">
+    <button class="menu-btn" th:if="${role == 'WRITER'}" onclick="openModal('load')">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       불러오기
     </button>
-    <button class="menu-btn" onclick="openModal('share')">
+    <button class="menu-btn" th:if="${role == 'WRITER'}" onclick="openModal('share')">
       <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       공유하기
     </button>
@@ -34,7 +34,12 @@
  
   <!-- 에디터 -->
   <div class="editor-wrap">
-    <textarea placeholder="여기에 메모를 작성하세요…" id="originalMemo" name="originalMemo" th:text="${memo.originalMemo}"></textarea>
+    <textarea placeholder="여기에 메모를 작성하세요…"
+              id="originalMemo"
+              name="originalMemo"
+			  th:text="${memo.originalMemo}"
+              th:readonly="${role == 'VIEWER'}"
+              th:classappend="${role == 'VIEWER'} ? ' viewer-mode'"></textarea>
   </div>
   <div id="memoId" style="display: none;" th:text="${memo.memoId}"></div>
  

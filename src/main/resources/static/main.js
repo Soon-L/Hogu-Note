@@ -1,4 +1,17 @@
 let currentMemoData = {}; // 모달이 열릴 때 현재 입력값을 저장할 변수
+
+// 입장하기 (실시간 공유 중인 새메모에 합류)
+async function doJoin() {
+    const code = document.getElementById('shareCodeInput').value.trim();
+
+    if (!code) {
+        alert('코드를 입력해주세요.');
+        return;
+    }
+
+    // /new_memo/{code} 로 이동 → MemoController가 세션에 code 저장
+    window.location.href = `/new_memo/${code}`;
+}
 let dbPassword; // db에서 가져온 비밀번호
 let currentPersonalCode;
 
@@ -167,7 +180,6 @@ async function currentData(pcode, pw){
 	
 	
 }
-
 
 
 

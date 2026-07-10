@@ -19,6 +19,12 @@
     <h1>누렁메모</h1>
     <p class="subtitle"> 메모를 간편하게 보관하세요</p>
 
+	<div class="section-label">공유 코드로 입장하기</div>
+	<div class="input-row">
+		<input type="text" placeholder="공유받은 코드를 입력하세요" id="shareCodeInput">
+		<button class="btn-load" id="joinMemo" onclick="doJoin()">입장하기</button>
+	</div>
+	
     <div class="section-label">코드로 불러오기</div>
     <div class="input-row">
 		<input type="text" placeholder="발급받은 코드를 입력하세요" id="codeInput">
@@ -33,6 +39,7 @@
       </svg>
       새로 만들기
     </a>
+	<div style="display: none;" th:text="${personalCode}"></div>
   </div>
   
   

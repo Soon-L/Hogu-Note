@@ -28,8 +28,28 @@ const body = document.body;
 const checkExist = body.dataset.checkExist === "true"; // 새메모, 불러온 메모 구분
 
 
+// textarea의 readonly 여부로 VIEWER 판별 (서버에서 Thymeleaf로 설정됨)
+const isViewer = document.getElementById('originalMemo').readOnly;
+
 // 변경사항 변수
 let unSavedChanges;
+
+// ── 새로고침/탭닫기 경고 (WRITER 전용) ──
+let isSaved = false; // 저장 완료 후 true → 경고 해제
+
+window.addEventListener('beforeunload', (e) => {
+    if (isViewer) return;                          // VIEWER는 경고 없음
+    if (isSaved) return;                           // 저장 완료 상태면 경고 없음
+    if (!originalMemoInput.value.trim()) return;   // 내용 없으면 경고 없음
+
+    // 새로고침은 저장 유도만 (CLOSE 발행 안 함 - 취소 시 오발행 방지)
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+
+
+
 
 
 
@@ -120,7 +140,8 @@ async function doSave() {
             throw new Error(errorData.message || '메모 저장 실패');
         }
         // 폼 초기화
-        currentMemoData = {}; // 저장 후 데이터 초기화
+        isSaved = true;                  // beforeunload 경고 해제
+        currentMemoData = {};
 
     } catch (error) {
         console.error('Error saving memo:', error);
@@ -162,7 +183,8 @@ async function doUpdate() {
             throw new Error(errorData.message || '메모 저장 실패');
         }
 
-        currentMemoData = {}; // 저장 후 데이터 초기화
+        isSaved = true;                  // beforeunload 경고 해제
+        currentMemoData = {};
 
     } catch (error) {
         console.error('Error saving memo:', error);
@@ -599,6 +621,11 @@ async function doExit() {
 	const code = personalCode.textContent.trim();
 	console.log("코드 가져옴?"+code);
 	
+	if(isViewer){
+		await doExitNow();
+		return;
+	}
+	
 	// 원본 데이터
 	if(checkExist){
 		await getMemo(code);
@@ -634,6 +661,8 @@ async function doExit() {
 
 // 저장x 나가기
 async function doExitNow(){
+    isSaved = true; // beforeunload 경고 없이 이동
+    sendClose();    // 참여자에게 CLOSE 알림
 	window.location.href = `/`;
 }
 
@@ -713,6 +742,91 @@ async function checkChange(){
 	}*/
 }
 
+
+
+
+
+// ===== WebSocket (STOMP) =====
+
+let client; // sendMemo()에서 참조할 수 있도록 스코프 밖에 선언
+
+window.addEventListener('load', () => {
+    const code = personalCode.textContent.trim();
+
+    client = new StompJs.Client({
+        webSocketFactory: () => new SockJS('/ws/memo'),
+        reconnectDelay: 3000,
+
+        onConnect: () => {
+            console.log('WebSocket 연결됨. role:', isViewer ? 'VIEWER' : 'WRITER', '/ code:', code);
+
+            // WRITER, VIEWER 모두 구독 (수신은 둘 다)
+            client.subscribe(`/topic/memo/${code}`, (frame) => {
+                const msg = JSON.parse(frame.body);
+                displayMemo(msg);
+            });
+        },
+
+        onDisconnect: () => console.log('WebSocket 연결 해제'),
+
+        onStompError: (frame) => console.error('STOMP 오류:', frame)
+    });
+
+    client.activate();
+});
+
+
+// 내가 입력할 때마다 발행 (textarea oninput에서 호출)
+function sendMemo() {
+    if (isViewer) return;                        // VIEWER는 발행 차단
+    if (!client || !client.connected) return;
+
+    const code = personalCode.textContent.trim();
+    const content = originalMemoInput.value;
+
+    client.publish({
+        destination: `/app/memo/${code}`,
+        body: JSON.stringify({
+            code: code,
+            content: content,
+            type: 'UPDATE'
+        })
+    });
+}
+
+
+// WRITER 이탈 시 참여자에게 알림
+function sendClose() {
+    if (isViewer) return;
+    if (!client || !client.connected) return;
+
+    const code = personalCode.textContent.trim();
+
+    client.publish({
+        destination: `/app/memo/${code}`,
+        body: JSON.stringify({
+            code: code,
+            type: 'CLOSE'
+        })
+    });
+}
+
+
+// 상대방 메모 수신 시 textarea 업데이트
+function displayMemo(msg) {
+    if (msg.type === 'UPDATE') {
+        // VIEWER는 항상 반영, WRITER는 포커스 밖일 때만 반영 (입력 중 덮어쓰기 방지)
+        if (isViewer || document.activeElement !== originalMemoInput) {
+            originalMemoInput.value = msg.content;
+        }
+    }
+
+    // WRITER가 나가면 VIEWER는 메인으로 이동
+    if (msg.type === 'CLOSE' && isViewer) {
+        alert('작성자가 메모장을 닫았습니다.');
+        window.location.href = '/';
+    }
+}
 
 
 
