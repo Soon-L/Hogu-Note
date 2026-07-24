@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>새 메모</title>
+  <!--quill editor 연결-->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <!--CodeMirror editor 연결-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.20/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.20/theme/dracula.min.css">
+  <!--일반 css-->
   <link rel="stylesheet" th:href="@{/newMemo.css}" />
 </head>
 <body th:data-check-exist="${checkExist}">
@@ -33,14 +39,25 @@
   </nav>
  
   <!-- 에디터 -->
-  <div class="editor-wrap">
+<!--  <div class="editor-wrap">
     <textarea placeholder="여기에 메모를 작성하세요…"
               id="originalMemo"
               name="originalMemo"
               oninput="sendMemo()"
               th:readonly="${role == 'VIEWER'}"
               th:classappend="${role == 'VIEWER'} ? ' viewer-mode'"></textarea>
-  </div>
+  </div>-->
+  <!--권한 부여-->
+  <div id="role" style="display: none;" th:text="${role}"></div>
+  
+  <!--CodeMirror editor-->
+  <div id="CodeMirror-editor" class="editor-wrap"></div>
+  
+  <!--quill editor-->
+  <div id="quill-editor" class="editor-wrap" oninput="sendMemo()"></div> <!--textarea처럼 활용-->
+  <!--<div id="quill-editor" class="editor-wrap"></div>--><!--quill dalta 활용-->
+  
+  
  
   <!-- 저장 모달 -->
   <div class="overlay" id="modal-save" onclick="closeOnOverlay(event, 'save')">
@@ -135,10 +152,12 @@
         </button>
       </div>
       <div class="share-divider"><span>또는</span></div>
-      <button class="btn-kakao" onclick="doKakaoShare()">
-        <span class="kakao-emoji">💬</span>
-        카카오톡으로 공유하기
-      </button>
+	  <a href="javascript:shareMessage()">
+		<button class="btn-kakao" type="button">
+		  <span class="kakao-emoji">💬</span>
+		  카카오톡으로 공유하기
+		</button>
+	  </a>
     </div>
   </div>
  
@@ -166,6 +185,14 @@
   <!-- SockJS + STOMP 클라이언트 -->
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+  <!--quill editor 연결-->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <!--CodeMirror editor 연결-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.20/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.20/mode/javascript/javascript.min.js"></script>
+  <!--카카오 공유하기-->
+  <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+  <!--일반 js-->
   <script th:src="@{/newMemo.js}"></script>
 </body>
 </html>

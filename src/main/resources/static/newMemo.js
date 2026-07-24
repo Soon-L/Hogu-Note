@@ -1,5 +1,22 @@
+// quill editor
+var quill = new Quill('#quill-editor',{
+	theme: 'snow',
+	value: '메모를 입력해주세요.'
+});
+
+
+// CodeMirror Editor
+var editor = CodeMirror(document.getElementById("CodeMirror-editor"),{
+	mode: "javascript",
+	theme: 'dracula',
+	value: '//여기에 입력하세요..',
+	lineNumbers : true,
+	lineWrapping: true
+});
+
+
 // currentData 변수
-const originalMemoInput = document.getElementById('originalMemo');
+//const originalMemoInput = quill.getText(); // 입력한 text
 const pwInput = document.getElementById('savePassword'); // 현재 메모 저장할때 비번
 const personalCode = document.getElementById('personalCode'); // 현재 메모의 코드
 const memoId = document.getElementById('memoId'); // 현재 메모id
@@ -28,8 +45,8 @@ const body = document.body;
 const checkExist = body.dataset.checkExist === "true"; // 새메모, 불러온 메모 구분
 
 
-// textarea의 readonly 여부로 VIEWER 판별 (서버에서 Thymeleaf로 설정됨)
-const isViewer = document.getElementById('originalMemo').readOnly;
+// 권한 가져오기
+const isViewer = document.getElementById('role').textContent == 'VIEWER';
 
 // 변경사항 변수
 let unSavedChanges;
@@ -37,19 +54,24 @@ let unSavedChanges;
 // ── 새로고침/탭닫기 경고 (WRITER 전용) ──
 let isSaved = false; // 저장 완료 후 true → 경고 해제
 
+
+
+// quill 변수
+const toolBar = document.querySelector('.ql-toolbar.ql-snow'); // 네비바
+
+
+
+
+
 window.addEventListener('beforeunload', (e) => {
     if (isViewer) return;                          // VIEWER는 경고 없음
     if (isSaved) return;                           // 저장 완료 상태면 경고 없음
-    if (!originalMemoInput.value.trim()) return;   // 내용 없으면 경고 없음
+    if (!quill.getText().trim()) return;   // 내용 없으면 경고 없음
 
     // 새로고침은 저장 유도만 (CLOSE 발행 안 함 - 취소 시 오발행 방지)
     e.preventDefault();
     e.returnValue = '';
 });
-
-
-
-
 
 
 
@@ -90,7 +112,7 @@ async function currentData(pcode, pw){
 	if(checkExist){
 		currentMemoData = {
 			memoId : memoId.textContent,
-		    originalMemo: originalMemoInput.value,
+		    originalMemo: quill.getText(),
 			summaryMemo : null,
 			personalCode: pcode,
 		    password: pw
@@ -101,7 +123,7 @@ async function currentData(pcode, pw){
 	// 새메모
 	else{
 		currentMemoData = {
-		    originalMemo: originalMemoInput.value,
+		    originalMemo: quill.getText(),
 			summaryMemo : null,
 			personalCode: pcode,
 		    password: pw
@@ -734,23 +756,30 @@ async function checkChange(){
 	}
 	
 	
-/*	// 나가기 -> 수정만 작동
-	console.log("판별용: "+exitAfterSave);
-	if(exitAfterSave){
-		exitAfterSave = false;
-		await doExitNow();
-	}*/
+	// 나가기 -> 수정만 작동
+//	console.log("판별용: "+exitAfterSave);
+//	if(exitAfterSave){
+//		exitAfterSave = false;
+//		await doExitNow();
+//	}
 }
 
 
 
 
 
-// ===== WebSocket (STOMP) =====
 
+
+
+
+
+// ===== Text WebSocket (STOMP) =====
 let client; // sendMemo()에서 참조할 수 있도록 스코프 밖에 선언
+const clientId = 'user-' + Math.random().toString(36).substring(2, 9); // 고유 클라이언트 ID
+let firstConnect = true;
 
 window.addEventListener('load', () => {
+	
     const code = personalCode.textContent.trim();
 
     client = new StompJs.Client({
@@ -763,7 +792,13 @@ window.addEventListener('load', () => {
             // WRITER, VIEWER 모두 구독 (수신은 둘 다)
             client.subscribe(`/topic/memo/${code}`, (frame) => {
                 const msg = JSON.parse(frame.body);
+
+				if (msg.clientId === clientId) {
+				    return; // 내가 보낸 메시지는 무시
+				}
+				
                 displayMemo(msg);
+				displayCode(msg);
             });
         },
 
@@ -778,17 +813,22 @@ window.addEventListener('load', () => {
 
 // 내가 입력할 때마다 발행 (textarea oninput에서 호출)
 function sendMemo() {
+	
+	console.log("확인용 입력값:"+quill.getText());
+	
+	
     if (isViewer) return;                        // VIEWER는 발행 차단
     if (!client || !client.connected) return;
 
     const code = personalCode.textContent.trim();
-    const content = originalMemoInput.value;
+    const content = quill.root.innerHTML;
 
     client.publish({
         destination: `/app/memo/${code}`,
         body: JSON.stringify({
             code: code,
             content: content,
+			clientId: clientId,
             type: 'UPDATE'
         })
     });
@@ -797,6 +837,8 @@ function sendMemo() {
 
 // WRITER 이탈 시 참여자에게 알림
 function sendClose() {
+	
+	
     if (isViewer) return;
     if (!client || !client.connected) return;
 
@@ -806,18 +848,22 @@ function sendClose() {
         destination: `/app/memo/${code}`,
         body: JSON.stringify({
             code: code,
+			clientId: clientId,
             type: 'CLOSE'
         })
     });
 }
 
-
-// 상대방 메모 수신 시 textarea 업데이트
+// 상대방 메모 수신 시 text 업데이트
 function displayMemo(msg) {
+	
+	console.log("확인용 입력값:"+quill.getText());
+	
+	
     if (msg.type === 'UPDATE') {
         // VIEWER는 항상 반영, WRITER는 포커스 밖일 때만 반영 (입력 중 덮어쓰기 방지)
-        if (isViewer || document.activeElement !== originalMemoInput) {
-            originalMemoInput.value = msg.content;
+        if (isViewer) {
+            quill.root.innerHTML = msg.content;
         }
     }
 
@@ -827,6 +873,108 @@ function displayMemo(msg) {
         window.location.href = '/';
     }
 }
+
+
+
+
+
+
+// Code WebSocket (STOMP)
+
+editor.on("change", (cm, change) => {
+	
+	if(firstConnect){
+		editor.setValue("");
+		firstConnect = false;
+	}
+
+	
+	console.log("변화: "+ cm.getValue());
+	
+	const code = personalCode.textContent.trim();
+
+    // 프로그램(setValue)으로 변경된 경우 무시
+    if (change.origin === "setValue") {
+        return;
+    }
+
+    if (!client.connected) {
+        return;
+    }
+
+    client.publish({
+        destination: `/app/memo/${code}`,
+        body: JSON.stringify({
+            coding: cm.getValue(),
+            clientId: clientId
+        })
+    });
+
+});
+
+
+function displayCode(msg) {
+
+    if (msg.clientId === clientId) return;
+
+    editor.setValue(msg.coding);
+
+}
+
+
+
+// ===== 카카오 공유하기 ======
+// 카카오톡 공유하기 openApi 
+    Kakao.init('JS API KEY');
+    // key 값을 가져오는지 확인 > console.log(Kakao.isInitialized());
+    function shareMessage() {
+		// 현재 메모 코드 가져오기
+		const code = personalCode.textContent.trim();
+		
+        // 현재 링크 가져오기
+        var currentURL = window.location.href+"/"+`${code}`;
+		
+		console.log("주소용: "+currentURL);
+
+/*		
+        // 제품 타이틀을 가져오는 부분
+        var productTitleElement = document.querySelector('p.prod_top');
+        var productTitle = productTitleElement ? productTitleElement.innerText : '';
+
+        // 제품 설명을 가져오는 부분
+        var productSummaryElement = document.querySelector('pre');
+        var productSummary = productSummaryElement ? productSummaryElement.innerText : '';
+
+        // 제품 이미지를 가져오는 부분
+        var productImageElement = document.querySelector('.swiper-slide img');
+        var productImageUrl = productImageElement ? productImageElement.getAttribute('src') : '';
+		*/
+
+        Kakao.Link.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: "Hogu-Note",
+                description: "일해라 노예들아",
+                imageUrl: "https://www.jjalbang.today/files/jjalboxthumb/2022/02/102_10835.jpg",
+                link: {
+                    mobileWebUrl: currentURL,
+                    webUrl: currentURL,
+                },
+            },
+            buttons: [
+                {
+                    title: '노예되기',
+                    link: {
+                        mobileWebUrl: currentURL,
+                        webUrl: currentURL,
+                    },
+                },
+            ],
+            // 카카오톡 미설치 시 카카오톡 설치 경로이동
+            installTalk: true,
+        });
+    }
+
 
 
 

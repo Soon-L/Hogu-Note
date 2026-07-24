@@ -75,7 +75,7 @@ html, body {
   margin: 0 auto;
 }
  
-textarea {
+.ql-editor {
   flex: 1;
   width: 100%;
   min-height: 300px;
@@ -92,8 +92,19 @@ textarea {
   box-shadow: 0 4px 24px rgba(41,87,207,0.06);
   transition: border 0.2s;
 }
-textarea:focus { border-color: var(--main); }
-textarea::placeholder { color: #ccc; }
+.ql-editor:focus { border-color: var(--main); }
+.ql-editor::placeholder { color: #ccc; }
+
+.ql-container.ql-snow{
+	border: 0px solid #ccc;
+}
+
+.ql-toolbar.ql-sonw{
+	display: block;
+}
+.ql-toolbar.ql-snow.viewer{
+	display: none;
+}
  
 /* ── 모달 오버레이 ── */
 .overlay {
