@@ -62,7 +62,6 @@ const toolBar = document.querySelector('.ql-toolbar.ql-snow'); // 네비바
 
 
 
-
 window.addEventListener('beforeunload', (e) => {
     if (isViewer) return;                          // VIEWER는 경고 없음
     if (isSaved) return;                           // 저장 완료 상태면 경고 없음
@@ -622,18 +621,29 @@ async function doLoadNow(){
 
 // 코드 복사
 function doCopy() {
-    // TODO: 실제 코드 복사 로직
-    const code = document.getElementById('shareCode').textContent;
-    alert('복사됨: ' + code + ' (구현 예정)');
+    const codeElement = document.getElementById('personalCode');
+    const code = codeElement.textContent;
+    const notification = document.getElementById('copy-notification');
+
+    // navigator.clipboard가 지원되지 않는 경우에 대한 대비
+    if (!window.navigator.clipboard) {
+        alert('클립보드 복사 기능이 지원되지 않는 브라우저입니다.');
+        return;
+    }
+
+    window.navigator.clipboard.writeText(code).then(() => {
+        // 안내창을 활성화
+        notification.classList.add('active');
+
+        // 2초 후에 안내창을 다시 숨김
+        setTimeout(() => {
+            notification.classList.remove('active');
+        }, 2000);
+    }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        alert('클립보드 복사에 실패했습니다.');
+    });
 }
-
-// 공유하기
-function doKakaoShare() {
-    // TODO: 카카오톡 공유 SDK 연동
-    alert('카카오톡 공유 (구현 예정)');
-}
-
-
 
 
 
@@ -793,12 +803,35 @@ window.addEventListener('load', () => {
             client.subscribe(`/topic/memo/${code}`, (frame) => {
                 const msg = JSON.parse(frame.body);
 
+				// 내가 보낸 메시지는 항상 무시
 				if (msg.clientId === clientId) {
-				    return; // 내가 보낸 메시지는 무시
+				    return;
 				}
 				
-                displayMemo(msg);
-				displayCode(msg);
+                // 메시지 타입에 따라 다른 함수 호출
+                switch(msg.type) {
+                    case 'UPDATE': // Quill 내용 업데이트
+                        displayMemoContent(msg);
+                        break;
+                    case 'CODE_UPDATE': // CodeMirror 내용 업데이트
+                        displayCodeContent(msg);
+                        break;
+                    case 'CODEBOX_TOGGLE': // CodeMirror 보이기/숨기기
+                        displayCodeboxVisibility(msg);
+                        break;
+					case 'MODE_TOGGLE': // 다크모드/라이트모드
+						darkModeUpdate(msg);
+						break;
+					case 'WIDEMODE_TOGGLE': // 와이드모드/기본모드
+						wideModeUpdate(msg);
+						break;
+                    case 'CLOSE': // 작성자 퇴장
+                        if (isViewer) {
+                            alert('작성자가 메모장을 닫았습니다.');
+                            window.location.href = '/';
+                        }
+                        break;
+                }
             });
         },
 
@@ -854,29 +887,63 @@ function sendClose() {
     });
 }
 
-// 상대방 메모 수신 시 text 업데이트
-function displayMemo(msg) {
-	
-	console.log("확인용 입력값:"+quill.getText());
-	
-	
-    if (msg.type === 'UPDATE') {
-        // VIEWER는 항상 반영, WRITER는 포커스 밖일 때만 반영 (입력 중 덮어쓰기 방지)
-        if (isViewer) {
-            quill.root.innerHTML = msg.content;
-        }
+// Quill 내용만 업데이트
+function displayMemoContent(msg) {
+    if (isViewer) {
+        quill.root.innerHTML = msg.content;
     }
+}
 
-    // WRITER가 나가면 VIEWER는 메인으로 이동
-    if (msg.type === 'CLOSE' && isViewer) {
-        alert('작성자가 메모장을 닫았습니다.');
-        window.location.href = '/';
+// CodeMirror 내용만 업데이트
+function displayCodeContent(msg) {
+    // 내용이 없는 메시지(예: 상태변경)는 무시
+    if (msg.coding !== undefined) {
+        editor.setValue(msg.coding);
+    }
+}
+
+// 코드박스 보임/숨김 상태만 업데이트
+function displayCodeboxVisibility(msg) {
+    const codeboxEl = document.querySelector('.editor-wrap.codeBox');
+    if (msg.visible) {
+        codeboxEl.classList.add('active');
+    } else {
+        codeboxEl.classList.remove('active');
     }
 }
 
 
+// 다크모드/라이트모드 업데이트
+function darkModeUpdate(msg) {
+    const modeBtn = document.body;
+    if (msg.mode == "dark" && msg.theme == "dracula") {
+        modeBtn.classList.add('dark-mode');
+		localStorage.setItem('theme', 'dark');
+		editor.setOption("theme", 'dracula');
+
+    } else {
+        modeBtn.classList.remove('dark-mode');
+		localStorage.setItem('theme', 'light');
+		editor.setOption("theme", 'default');
+    }
+}
 
 
+// 와이드모드/기본모드 업데이트
+function wideModeUpdate(msg) {
+	const codeboxEl = document.getElementById('CodeMirror-editor');
+	const quillboxEl = document.getElementById('quill-editor');
+	
+    if (msg.wideCodebox && msg.wiedQuillbox) {
+        codeboxEl.classList.add('wide');
+		quillboxEl.classList.add('wide');
+
+
+    } else {
+		codeboxEl.classList.remove('wide');
+		quillboxEl.classList.remove('wide');
+    }
+}
 
 
 // Code WebSocket (STOMP)
@@ -902,9 +969,11 @@ editor.on("change", (cm, change) => {
         return;
     }
 
+    // [수정] 메시지 타입 'CODE_UPDATE' 추가
     client.publish({
         destination: `/app/memo/${code}`,
         body: JSON.stringify({
+            type: 'CODE_UPDATE',
             coding: cm.getValue(),
             clientId: clientId
         })
@@ -913,19 +982,29 @@ editor.on("change", (cm, change) => {
 });
 
 
-function displayCode(msg) {
+// displayCode 함수는 이제 displayCodeContent 와 displayCodeboxVisibility 로 분리되어 사용되지 않음.
+// 이전에 displayCode 함수가 있던 자리는 비워두거나, 다른 함수들로 대체됨.
 
-    if (msg.clientId === clientId) return;
 
-    editor.setValue(msg.coding);
+function displayMode(msg){
+	const codeboxBtn = document.querySelector('.editor-wrap.codeBox');
 
+	// 보임
+	if(msg.codeboxValue){
+		codeboxBtn.classList.add('active');
+	}
+	// 안보임
+	else{
+		codeboxBtn.classList.remove('active');
+	}
 }
+
 
 
 
 // ===== 카카오 공유하기 ======
 // 카카오톡 공유하기 openApi 
-    Kakao.init('JS API KEY');
+    Kakao.init('ea7ae8946a89323e3d7f202d9b9bc477');
     // key 값을 가져오는지 확인 > console.log(Kakao.isInitialized());
     function shareMessage() {
 		// 현재 메모 코드 가져오기
@@ -976,6 +1055,101 @@ function displayCode(msg) {
     }
 
 
+	
+	
+
+// === 토글 (와이드모드, 코드박스, 다크모드) ====
+// 와이드모드
+function widemode(){
+	const codeboxEl = document.getElementById('CodeMirror-editor');
+	const quillboxEl = document.getElementById('quill-editor');
+	
+	// 와이드모드/기본모드 변경
+	const codebox = codeboxEl.classList.toggle('wide');
+	const quillbox = quillboxEl.classList.toggle('wide');
+	
+	// 웹소켓 연결이 없으면 전송하지 않음
+	if (!client || !client.connected) return;
+
+	const code = personalCode.textContent.trim();
+
+	// 다른 참여자들에게 '상태 변경' 메시지 전송
+	client.publish({
+		destination: `/app/memo/${code}`,
+		body: JSON.stringify({
+			type: 'WIDEMODE_TOGGLE',
+			wideCodebox: codebox,
+			wiedQuillbox: quillbox,
+			clientId: clientId
+		})
+	});
+}
+
+// 코드박스
+function codebox(){
+	const codeboxEl = document.querySelector('.editor-wrap.codeBox');
+	
+	// 작성자 코드박스 보임/안보임
+	const isNowVisible = codeboxEl.classList.toggle('active');
+
+	// 웹소켓 연결이 없으면 전송하지 않음
+	if (!client || !client.connected) return;
+
+	const code = personalCode.textContent.trim();
+
+	// 다른 참여자들에게 '상태 변경' 메시지 전송
+	client.publish({
+		destination: `/app/memo/${code}`,
+		body: JSON.stringify({
+			type: 'CODEBOX_TOGGLE',
+			visible: isNowVisible,
+			clientId: clientId
+		})
+	});
+}
+
+//다크모드
+function darkmode(){
+    const isDarkMode = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+	
+	// 다크모드/라이트모드
+	const mode = localStorage.getItem('theme');
+	
+    
+    // CodeMirror 테마도 함께 변경
+    const newTheme = isDarkMode ? 'dracula' : 'default';
+    editor.setOption("theme", newTheme);
+	
+	
+	// 웹소켓 연결이 없으면 전송하지 않음
+	if (!client || !client.connected) return;
+	
+	const code = personalCode.textContent.trim();
+	
+	// 다른 참여자들에게 '상태 변경' 메시지 전송
+	client.publish({
+		destination: `/app/memo/${code}`,
+		body: JSON.stringify({
+			type: 'MODE_TOGGLE',
+			mode: mode,
+			theme: newTheme,
+			clientId: clientId
+		})
+	});
+}
+
+// 페이지 로드 시 저장된 테마 적용
+(function applySavedTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        editor.setOption("theme", "dracula");
+    } else {
+        // 라이트 모드일 경우 CodeMirror 테마를 'default'로 설정
+        editor.setOption("theme", "default");
+    }
+})();
 
 
 

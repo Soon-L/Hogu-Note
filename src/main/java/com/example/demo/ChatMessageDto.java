@@ -18,6 +18,11 @@ public class ChatMessageDto {
     private String coding;
 	private String clientId;
     private String type; // "UPDATE", "JOIN", "LEAVE"
+    private Boolean visible; // 코드박스 보임/숨김 상태
+    private String theme; // 코드미러 테마(라이트, 다크)
+    private String mode; // 배경색(다크모드, 라이트모드)
+    private Boolean wideCodebox; // 코드박스 와이드모드
+    private Boolean wiedQuillbox; // quill 와이드모드
 
 }
 

@@ -20,6 +20,15 @@
       <svg viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2H7l-4 4V5z"/></svg>
       누렁메모
     </span>
+	<button id="widemode" class="menu-btn" th:if="${role == 'WRITER'}" onclick="widemode()">
+	  와이드모드
+	</button>
+	<button id="darkmode" class="menu-btn" th:if="${role == 'WRITER'}" onclick="darkmode()">
+	  다크모드
+	</button>
+	<button id="codebox" class="menu-btn" th:if="${role == 'WRITER'}" onclick="codebox()">
+	  코드박스
+	</button>
     <button class="menu-btn" th:if="${role == 'WRITER'}" onclick="openSave()">
       <svg viewBox="0 0 24 24"><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       저장
@@ -51,7 +60,7 @@
   <div id="role" style="display: none;" th:text="${role}"></div>
   
   <!--CodeMirror editor-->
-  <div id="CodeMirror-editor" class="editor-wrap"></div>
+  <div id="CodeMirror-editor" class="editor-wrap codeBox"></div>
   
   <!--quill editor-->
   <div id="quill-editor" class="editor-wrap" oninput="sendMemo()"></div> <!--textarea처럼 활용-->
@@ -144,6 +153,10 @@
       </div>
       <div class="modal-title">공유하기</div>
       <div class="modal-desc">아래 코드를 공유해주세요</div>
+
+      <!-- ▼ 복사 완료 안내창 ▼ -->
+      <div id="copy-notification" class="copy-notification">코드가 클립보드에 복사되었습니다!</div>
+
       <div class="share-code-row">
         <div class="code-box" id="personalCode" th:text="${personalCode}">test code</div>
         <button class="btn-copy" onclick="doCopy()">
