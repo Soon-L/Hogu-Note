@@ -54,11 +54,7 @@ public class MemoService {
 				.build();
 		
 		Memo savedMemo = memoRepository.save(memo);
-		
-//		System.out.println("저장 시도: "+savedMemo);
-//		System.out.println("비밀번호 해싱 됐냐?: " + savedMemo.getPassword());
-		
-		//System.out.println("해싱된 비번 저장: "+memo.password());
+
 		
 		return MemoResponseDto.fromEntity(savedMemo);
 	}
@@ -129,37 +125,7 @@ public class MemoService {
 	}
 	
 	
-	
-	
-	
-//	// 코드로 원본 메모 불러오기
-//	public MemoResponseDto findMemoByPersonalCode(MemoRequestDto requestDto) throws Exception {
-//		
-//		
-//		Optional<Memo> existingMemo = memoRepository.findByPersonalCode(requestDto.getPersonalCode());
-//		
-//		Memo memo = existingMemo.orElseThrow();
-//
-//		
-//		
-//		// 비밀메모일경우 예외처리 (공개메모는 안 탐)
-//		if(memo.getPassword() != "") { // 공개 메모가 아니면	
-//			
-//			if(requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) { // 비밀번호 입력
-//				throw new Exception("시크릿 메모는 비밀번호를 입력해야합니다.");
-//				
-//			}
-//			if(!passwordEncoder.matches(requestDto.getPassword(), memo.getPassword())){ // 비밀번호 일치
-//				throw new Exception("비밀번호가 일치하지 않습니다");
-//			}
-//
-//		}
-//			
-//		
-//		return MemoResponseDto.fromEntity(memo);
-//		
-//	}
-	
+
 	
 	
 	// 메모 불러오기
@@ -179,11 +145,6 @@ public class MemoService {
 			
 			// 비밀번호 해싱 확인
 			if(!passwordEncoder.matches(providedPassword.trim(), memo.password())) {
-				
-				System.out.println("입력 비번: " + providedPassword);
-				System.out.println("DB 비번: " + memo.password());
-				boolean matchResult = passwordEncoder.matches(providedPassword.trim(), memo.password());
-				System.out.println("돟일한지 (matches method result): " + matchResult);
 				throw new UnauthorizedException("비밀번호 불일치.");
 			}
 		}
@@ -208,36 +169,6 @@ public class MemoService {
 	
 	
 	
-//    // 기존 메모 수정
-//	@Transactional
-//	public MemoResponseDto updateMemo(MemoRequestDto requestDto) {
-//		
-//		
-//		// 비밀번호 해싱
-//		 String hashedPassword = passwordEncoder.encode(requestDto.getPassword());
-//		 
-//		
-//		Optional<Memo> beforeMemo = memoRepository.findById(requestDto.getMemoId());
-//		
-//		Memo memo = beforeMemo.get();
-//		
-//		memo.setOriginalMemo(requestDto.getOriginalMemo());
-//		memo.setSummaryMemo(null);
-//		memo.setPassword(hashedPassword);
-//		memo.setUpdatedAt(Instant.now());
-//		
-//		System.out.println("수정된 정보: " + memo);
-//		
-//		memoRepository.save(memo);
-//		
-//		
-//		return MemoResponseDto.fromEntity(memo);
-//		
-//	}
-	
-	
-	
-	
 	// 메모 수정
 	@Transactional
 	 public MemoResponseDto updateMemo(MemoUpdateRequestDto requestDto) {
@@ -247,31 +178,12 @@ public class MemoService {
 				 .orElseThrow(() -> new MemoNotFoundException("Memo with personal code " + requestDto.getPersonalCode() + " not found."));
 		
 		
-		
-		// 시크릿메모여부 확인
-//				if(memo.password() != "") {
-//					
-//					// 비밀번호 입력 확인
-//					if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
-//						 throw new UnauthorizedException("Password is required for this secret memo.");
-//					}
-//					
-//					// 비밀번호 해싱 확인
-//					if(!passwordEncoder.matches(requestDto.getPassword(), memo.password())) {
-//						throw new UnauthorizedException("Invalid password for secret memo.");
-//					}
-//				}else {
-//					if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
-//						memo.password(passwordEncoder.encode(requestDto.getPassword()));
-//					}
-//				}
-				
 				
 				// 수정 내용 저장
 				memo.originalMemo(requestDto.getOriginalMemo());
 				memo.summaryMemo(requestDto.getSummaryMemo());
 				//memo.updatedAt(Instant.now());
-				memo.updatedAt(LocalDateTime.now());
+				memo.updatedAt(Instant.now());
 				
 				
 				Memo updatedMemo = memoRepository.save(memo);
@@ -280,15 +192,5 @@ public class MemoService {
 				
 	}
 	
-	
-	
-	
-	
-
-
-
-
-
-
 
 }

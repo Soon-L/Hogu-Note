@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -12,21 +13,16 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 // ws://localhost:8080/memo 로 접속함
-//public class WebSocketConfig implements WebSocketConfigurer {
-//	
-//	private final MemoService memoService;
-//
-//    @Override
-//    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-//
-//        registry.addHandler(new MemoWebSocketHandler(memoService), "/memo")
-//                .setAllowedOrigins("*");
-//    }
-//
-//}
-
-
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+	
+    private final StompHandler stompHandler; // 생성한 인터셉터 주입
+    
+    
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(stompHandler); // 클라이언트 요청 진입 시 인터셉터 검증
+    }
+
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {

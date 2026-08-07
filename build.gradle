@@ -26,9 +26,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 
     // Database Driver
-//    implementation 'org.postgresql:postgresql'
-//    runtimeOnly 'com.mysql:mysql-connector-j'
-    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    implementation 'org.postgresql:postgresql'
 
 
     // Lombok (코드 자동 생성)
@@ -40,11 +38,7 @@ dependencies {
 
     // 테스트 관련 의존성
     testImplementation 'org.springframework.boot:spring-boot-starter-test' // 여러 test 스타터 통합
-    
-    // H2
-//    runtimeOnly 'com.h2database:h2'
-    
-    
+
     // 시큐리티(비밀번호 해시)
     implementation 'org.springframework.boot:spring-boot-starter-security'
     

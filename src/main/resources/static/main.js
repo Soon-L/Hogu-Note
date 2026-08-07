@@ -12,7 +12,7 @@ async function doJoin() {
     // /new_memo/{code} 로 이동 → MemoController가 세션에 code 저장
     window.location.href = `/new_memo/${code}`;
 }
-let dbPassword; // db에서 가져온 비밀번호
+
 let currentPersonalCode;
 
 
@@ -61,7 +61,6 @@ async function doLoad(){
 		return;
 	}
 	
-	await getPassword(code);
 	
 	try{		
 		const response = await fetch(`/api/memo/${code}/type`, {
@@ -80,10 +79,12 @@ async function doLoad(){
 			throw new Error(errorData.message || '코드 확인 실패');
 		}
 		
-		//openModal('password');
+		// 비밀메모 확인
+		const data = await response.json();
+		const isSecret = data.isSecret
 		
 		// 비밀메모
-		if(dbPassword !== null){
+		if(isSecret){
 			openModal('password');
 			
 		}
@@ -111,9 +112,6 @@ async function getPassword(pcode){
 	    .then(response => response.json()) // JSON 형태로 파싱
 	    .then(data => {
 	        console.log(data.message); // "성공"
-			//console.log(data.dto.password);
-			
-			dbPassword = data.dto.password;
 			
 	    })
 	    .catch(error => console.error('Error:', error));
