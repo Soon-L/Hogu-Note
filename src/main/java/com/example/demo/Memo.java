@@ -32,22 +32,14 @@ public class Memo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "memo_id")
     private Long memoId;
-
-//    @CreationTimestamp // 엔티티 생성시 현재 시간 자동 설정
-//    @Column(name = "created_at", nullable = false, updatable = false) // updatable = false 생성시에만 설정
-//    private Instant createdAt;
-//
-//    @UpdateTimestamp // 엔티티 수정시 현재 시간 자동 설정
-//    @Column(name = "updated_at", nullable = false)
-//    private Instant updatedAt;
     
     @CreationTimestamp // 엔티티 생성시 현재 시간 자동 설정
     @Column(name = "created_at", nullable = false, updatable = false) // updatable = false 생성시에만 설정
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @UpdateTimestamp // 엔티티 수정시 현재 시간 자동 설정
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Column(name = "personal_code", unique = true, nullable = false, length = 255) // 길이 기본값 255
     private String personalCode;

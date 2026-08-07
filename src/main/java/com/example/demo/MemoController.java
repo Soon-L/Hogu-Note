@@ -1,13 +1,9 @@
 package com.example.demo;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 public class MemoController {
 	
 	private final MemoService memoService;
+
 	
 	// 메인페이지
 	@GetMapping("")
@@ -70,6 +67,20 @@ public class MemoController {
             model.addAttribute("errorMessage", "접근 권한이 없습니다.");
             return "errorPage";
         }
+        
+        
+        // 시크릿 메모 여부 확인
+        boolean isSecret = memoService.checkMemoType(code);
+        if (isSecret) {
+            // 시크릿 메모라면 세션에 code를 넣지 않고 이전 code 세션도 제거 (웹소켓 차단)
+            session.removeAttribute("code");
+            model.addAttribute("personalCode", code);
+            model.addAttribute("isSecret", true); // 프론트엔드에 비밀번호 입력창 띄우도록 전달
+            model.addAttribute("errorMessage", "접근 권한이 없습니다.");
+            return "errorPage";
+        }
+        
+        
 
         // 최초 입장이거나 동일 code 재진입 → 세션에 저장
         session.setAttribute("code", code);
@@ -91,27 +102,31 @@ public class MemoController {
 	@GetMapping("/memo/{personalCode}")
 	public String displayMemo(@PathVariable("personalCode") String personalCode, Model model, HttpSession session) {
 		
-		
-		System.out.println("진입1");
-		
 		// 공개 메모 or 비번 확인된 메모 반환
 		// 비밀번호 확인은 MemoDtoController에서 처리
 		try {
+			// 시크릿메모인지 확인
+			boolean secretMemo = memoService.checkMemoType(personalCode);
 			
-			System.out.println("진입2");
-			
-			 MemoResponseDto memo = memoService.findMemoByPersonalCode(personalCode);
-			 model.addAttribute("memo", memo);
-			 
-			 System.out.println("점검 memo.getMemoId : " + memo.getMemoId());
-			 
-		     // 수정 불가
-		     session.setAttribute("role", "VIEWER");
-		     model.addAttribute("role", "VIEWER");
-			 
-		     // 새메모인지 확인
-		     boolean checkExist = memoService.memoExist(personalCode);
-		     model.addAttribute("checkExist", checkExist);
+			// 시크릿메모 -> 메인 머물기
+			if(secretMemo) {
+				
+				return "redirect:/";
+			}
+			// 일반메모 -> 메모장 오픈
+			else {
+				 MemoResponseDto memo = memoService.findMemoByPersonalCode(personalCode);
+				 model.addAttribute("memo", memo);
+				 
+			     // 수정 불가
+			     session.setAttribute("role", "VIEWER");
+			     model.addAttribute("role", "VIEWER");
+				 
+			     // 새메모인지 확인
+			     boolean checkExist = memoService.memoExist(personalCode);
+			     model.addAttribute("checkExist", checkExist);
+			}
+
 			 
 			 
 			 return "loadMemo";
